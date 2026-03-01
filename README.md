@@ -1,5 +1,5 @@
 # Digital Window (WIP)
-Project to create a CAVE/AR type of display based on head tracking data + off-axis projection. Currently, only head tracking is present, currently working on fine-tuning the head tracking and working in Unity for rendering.  
+Project to create a CAVE/AR type of display based on head tracking data + off-axis projection. Currently, only head tracking is present, currently working on fine-tuning the head tracking and Unity script.    
 # Requirements
 Face Landmark Model: https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task  
 Unity Version 6000.3.9f1  
