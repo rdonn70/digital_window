@@ -8,9 +8,11 @@ using UnityEngine.Device;
 
 public class OffAxisProjection : MonoBehaviour
 {
-    private float width = 0.597f;
+    private float width = 1.2460f;
     private float offsetX = 0f; //optional adjustment
     private float offsetY = 0f; //optional adjustment
+    private Vector3 smoothedPos = new Vector3(0f, 0f, 0.6f);
+    private float smoothing = 0.1f;
 
     private float near = 0.05f;
     private float far = 100f;
@@ -26,7 +28,7 @@ public class OffAxisProjection : MonoBehaviour
         style.fontSize = 24;
         style.normal.textColor = Color.yellow;
         GUI.Label(new Rect(10, 10, 500, 30), "RawPos: " + rawPos.ToString("F3"), style);
-        GUI.Label(new Rect(10, 40, 500, 30), $"Width: {width:F4}  OffsetX: {offsetX:F4}  OffsetY: {offsetY:F4}", style);
+        GUI.Label(new Rect(10, 40, 500, 30), $"Width: {width:F4}  OffsetX: {offsetX:F4}  OffsetY: {offsetY:F4}  Smoothing: {smoothing:F4}", style);
     }
 
     void Start()
@@ -59,7 +61,8 @@ public class OffAxisProjection : MonoBehaviour
 
     void ApplyOffAxis()
     {
-        Vector3 pe = rawPos;
+        smoothedPos = Vector3.Lerp(smoothedPos, rawPos, smoothing);
+        Vector3 pe = smoothedPos;
 
         float height = width / cam.aspect;
         Vector3 pa = new Vector3((-width / 2) + offsetX, (-height / 2) + offsetY, 0);
@@ -109,6 +112,8 @@ public class OffAxisProjection : MonoBehaviour
             if (keyboard.downArrowKey.isPressed) offsetY -= step;
             if (keyboard.leftBracketKey.isPressed) width -= step;
             if (keyboard.rightBracketKey.isPressed) width += step;
+            if (keyboard.commaKey.isPressed) smoothing = Mathf.Max(0.01f, smoothing - 0.01f);
+            if (keyboard.periodKey.isPressed) smoothing = Mathf.Min(1.0f, smoothing + 0.01f);
         }
     }
 
