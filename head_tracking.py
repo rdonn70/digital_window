@@ -51,8 +51,8 @@ with FaceLandmarker.create_from_options(options) as landmarker:
 
             landmarks = latest_result.face_landmarks[0]
 
-            left_eye = landmarks[33]
-            right_eye = landmarks[263]
+            left_eye = landmarks[473]
+            right_eye = landmarks[468]
             nose_bridge = landmarks[168]
 
             lx, ly = int(left_eye.x * w), int(left_eye.y * h)
