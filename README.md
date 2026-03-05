@@ -4,6 +4,7 @@ Project to create a CAVE/AR type of display based on head tracking data + off-ax
 Face Landmark Model: https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task  
 Unity Version 6000.3.9f1  
 Webcam  
+Python  
 # Setup
 1. Create a new folder on your desktop, this will hold the landmark detection Python script (head_tracking.py) and Face Landmark Model (https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task).  
 2. Create a new Unity Project using Unity Version 6000.3.9f1.  
