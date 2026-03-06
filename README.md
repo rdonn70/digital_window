@@ -1,7 +1,21 @@
 # Digital Window (WIP)
-Project to create a CAVE-type of display on a projector, based on head tracking data + off-axis projection.  
-A rough prototype is available for download.  
-Currently looking at implementing a one euro filter to solve jitter, tweaking keyboard inputs for calibration, and solving possible issues with the y-axis offset values.  
+Project to create a CAVE (Cave Automatic Virtual Environment)-type of display on a projector, based on head tracking data + off-axis projection. By tracking the viewer's head position with a webcam and dynamically adjusting the camera projection matrix, the display behaves like a window into a 3D world rather than a flat monitor.  
+
+# How It Works  
+1. A webcam captures the user's face.  
+2. MediaPipe detects facial landmarks and estimates head position.  
+3. The head position is streamed to Unity using UDP (on port 5005).  
+4. Unity modifies the camera projection matrix using off-axis projection.  
+5. The rendered scene updates perspective based on the viewer's head movement.  
+  
+A rough prototype is available for download **(Current Version: 0.1)**. The controls are as follows:  
+**To Adjust the Screen:**  
+- Use Left/Right arrow keys for X offset.  
+- Use Up/Down arrow keys for Y offset.  
+- Use Left/Right bracket keys for monitor width adjustment.  
+- Use Comma/Period keys for smoothing.
+  
+I am currently looking at implementing a one euro filter to solve jitter, tweaking keyboard inputs for calibration, and solving possible issues with the y-axis offset values.  
   
 # Running from Build (recommended)  
 1. Download the latest release from GitHub.
@@ -32,3 +46,8 @@ Currently looking at implementing a one euro filter to solve jitter, tweaking ke
 2. **Y-Axis Adjustments Not Correct.** The intended offset adjustment for the y-axis is a translation, not a camera tilt. This is most likely due to an incorrect sign upon importing the data, or I am putting the y-axis offset in the wrong place.  
 3. **Keyboard Inputs.** Current keyboard inputs are extremely sensitive. This should be a simple fix of preventing values from changing when the key is held down.  
 4. **Latency and Missed-Frame Prediction.** I will probably never be satisfied with this, but I believe there could be big improvements to the latency from Capture -> UDP -> Unity. I also believe the current missed-frame prediction (inside the "head_tracking.py" script) is not working perfectly, and could be improved through better mediapipe implementation and adding optional camera calibration.  
+  
+#REFERENCES  
+- **Generalized Perspective Projection _(Robert Kooima, 2009)_.** (Source: https://discussions.unity.com/uploads/short-url/r7D1Sc8bPTsZhNnSXHTBDJM0XEw.pdf)  
+- **Unity API Documentation.** (Source: https://docs.unity3d.com/560/Documentation/ScriptReference/Camera-projectionMatrix.html)  
+- **Google MediaPipe Documentation.** (Source: https://ai.google.dev/edge/mediapipe/solutions/vision/face_landmarker)  
