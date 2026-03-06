@@ -6,11 +6,13 @@ using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem;
 using UnityEngine.Device;
 
+// Heavily borrows from Robert Kooima's Generalized Perspective Projection (2009) Paper: https://discussions.unity.com/uploads/short-url/r7D1Sc8bPTsZhNnSXHTBDJM0XEw.pdf
+
 public class OffAxisProjection : MonoBehaviour
 {
-    private float width = 1.2460f;
-    private float offsetX = 0f; //optional adjustment
-    private float offsetY = 0f; //optional adjustment
+    private float width = 1.2460f; // setting a magic number baseline value for the screen width
+    private float offsetX = 0f; // optional x adjustment offset
+    private float offsetY = 0f; // optional y adjustment offset
     private Vector3 smoothedPos = new Vector3(0f, 0f, 0.6f);
     private float smoothing = 0.1f;
 
@@ -19,15 +21,17 @@ public class OffAxisProjection : MonoBehaviour
 
     private Camera cam;
     private UdpClient udp;
-    private Vector3 rawPos = new Vector3(0f, 0f, 0f);
+    private Vector3 raw_pos = new Vector3(0f, 0f, 0f);
+    private Vector3 raw_pos_prev = new Vector3(0f, 0f, 0f);
     private Vector3 vr, vu, vn;
 
     void OnGUI()
     {
+        // this is all just debug stuff, feel free to ignore
         GUIStyle style = new GUIStyle();
         style.fontSize = 24;
         style.normal.textColor = Color.yellow;
-        GUI.Label(new Rect(10, 10, 500, 30), "RawPos: " + rawPos.ToString("F3"), style);
+        GUI.Label(new Rect(10, 10, 500, 30), "RawPos: " + raw_pos.ToString("F3"), style);
         GUI.Label(new Rect(10, 40, 500, 30), $"Width: {width:F4}  OffsetX: {offsetX:F4}  OffsetY: {offsetY:F4}  Smoothing: {smoothing:F4}", style);
     }
 
@@ -37,11 +41,12 @@ public class OffAxisProjection : MonoBehaviour
         cam.nearClipPlane = near;
         cam.farClipPlane = far;
 
+        // Using the power of unity, I can skip the subtraction/cross product to determine the right, up, and forward vectors :)
         vr = Vector3.right;
         vu = Vector3.up;
         vn = Vector3.forward;
 
-        udp = new UdpClient(5005);
+        udp = new UdpClient(5005); // start listening for the data from the python program
         udp.Client.Blocking = false;
     }
 
@@ -49,19 +54,19 @@ public class OffAxisProjection : MonoBehaviour
     {
         if (udp.Available > 0)
         {
-            IPEndPoint ep = new IPEndPoint(IPAddress.Any, 5005);
-            byte[] data = udp.Receive(ref ep);
+            IPEndPoint ip = new IPEndPoint(IPAddress.Any, 5005);
+            byte[] data = udp.Receive(ref ip);
             string json = Encoding.UTF8.GetString(data);
 
             var parsed = JsonUtility.FromJson<HeadData>(json);
 
-            rawPos = new Vector3(-parsed.x / 1000f, -parsed.y / 1000f, parsed.z / 1000f);
+            raw_pos = new Vector3(-parsed.x / 1000f, -parsed.y / 1000f, parsed.z / 1000f); // correcting incoming data from the python program
         }
     }
 
     void ApplyOffAxis()
     {
-        smoothedPos = Vector3.Lerp(smoothedPos, rawPos, smoothing);
+        smoothedPos = Vector3.Lerp(raw_pos_prev, raw_pos, smoothing);
         Vector3 pe = smoothedPos;
 
         float height = width / cam.aspect;
@@ -70,17 +75,20 @@ public class OffAxisProjection : MonoBehaviour
         Vector3 pc = new Vector3((-width / 2) + offsetX, (height / 2) + offsetY, 0);
 
         Vector3 va = pa - pe;
+        Vector3 vb = pb - pe;
+        Vector3 vc = pc - pe;
+
         float d = -Vector3.Dot(va, vn); // distance from eye to screen plane
         if (d <= 0.001f) {
-            return;
+            return; // prevent the projection from breaking if the user goes past the camera
         }
 
         float left = Vector3.Dot(vr, va) * (near / d);
-        float right = Vector3.Dot(vr, pb - pe) * (near / d);
+        float right = Vector3.Dot(vr, vb) * (near / d);
         float bottom = Vector3.Dot(vu, va) * (near / d);
-        float top = Vector3.Dot(vu, pc - pe) * (near / d);
+        float top = Vector3.Dot(vu, vc) * (near / d);
 
-        // Projection matrix
+        // "Off Center Projection Matrix", taken from https://docs.unity3d.com/560/Documentation/ScriptReference/Camera-projectionMatrix.html
         Matrix4x4 proj = Matrix4x4.zero;
         proj[0, 0] = (2.0f * near) / (right - left);
         proj[0, 2] = (right + left) / (right - left);
@@ -89,12 +97,13 @@ public class OffAxisProjection : MonoBehaviour
         proj[2, 2] = -(far + near) / (far - near);
         proj[2, 3] = -(2.0f * far * near) / (far - near);
         proj[3, 2] = -1.0f;
-        cam.projectionMatrix = proj;
 
-        cam.transform.position = pe;
-        Debug.Log($"Camera position: {cam.transform.position.ToString("F4")}");
-        cam.transform.rotation = Quaternion.identity;
+        cam.projectionMatrix = proj; // sets the camera's projection matrix
+        cam.transform.position = pe; // update's the camera's position in world space with the head tracked location from the python program
 
+        cam.transform.rotation = Quaternion.identity; // we care not for camera rotation (at this point in time)
+
+        raw_pos_prev = raw_pos; // for temporal linear interpolation - sounds fancy when you add the word "temporal" :^)
     }
 
     void Update()
@@ -102,6 +111,7 @@ public class OffAxisProjection : MonoBehaviour
         ReceiveUDP();
         ApplyOffAxis();
 
+        // after getting the UDP packet and applying the projection, we look for keyboard inputs in order to calibrate the screen and adjust head data smoothing
         float step = 0.001f;
         var keyboard = Keyboard.current;
         if (keyboard != null)
@@ -112,7 +122,7 @@ public class OffAxisProjection : MonoBehaviour
             if (keyboard.downArrowKey.isPressed) offsetY -= step;
             if (keyboard.leftBracketKey.isPressed) width -= step;
             if (keyboard.rightBracketKey.isPressed) width += step;
-            if (keyboard.commaKey.isPressed) smoothing = Mathf.Max(0.01f, smoothing - 0.01f);
+            if (keyboard.commaKey.isPressed) smoothing = Mathf.Max(0.0f, smoothing - 0.01f);
             if (keyboard.periodKey.isPressed) smoothing = Mathf.Min(1.0f, smoothing + 0.01f);
         }
     }
