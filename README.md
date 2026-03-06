@@ -1,13 +1,34 @@
 # Digital Window (WIP)
-Project to create a CAVE/AR type of display based on head tracking data + off-axis projection. Currently, only head tracking is present, currently working on fine-tuning the head tracking and Unity script.    
-# Requirements
-Face Landmark Model: https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task  
-Unity Version 6000.3.9f1  
-Webcam  
-Python  
-# Setup
-1. Create a new folder on your desktop, this will hold the landmark detection Python script (head_tracking.py) and Face Landmark Model (https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task).  
-2. Create a new Unity Project using Unity Version 6000.3.9f1.  
-3. Put a default camera in the Unity Project at the world origin (0, 0, 0). Assign C# file "OffAxisProjection.cs" to the camera.  
-4. Run Python Script (head_tracking.py), Execute the game in Unity.  
-5. Calibrate the camera using arrow keys, and square bracket keys on keyboard.  
+Project to create a CAVE-type of display on a projector, based on head tracking data + off-axis projection.  
+A rough prototype is available for download.  
+Currently looking at implementing a one euro filter to solve jitter, tweaking keyboard inputs for calibration, and solving possible issues with the y-axis offset values.  
+  
+# Running from Build (recommended)  
+1. Download the latest release from GitHub.
+2. Extract .zip to your computer.
+3. Make sure you have a webcam connected (current ideal setup is webcam mounted in the center of the monitor and on top of the primary display while facing the user).  
+4. Run "launcher.exe".
+  
+# Compiling from Source  
+## Python Setup  
+1. Download the Face Landmark Model from Google (https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task).  
+2. Download Python (version 3.13.4).  
+3. Install the library dependencies: "pip install opencv-python==4.13.0.92", "pip install numpy==2.4.2", "pip install mediapipe==0.10.32", "pip install pyinstaller==6.18.0".  
+4. From the source folder on this GitHub, download "head_tracking.py" and "launcher.py" to a development folder of your choice. Feel free to modify this file.  
+5. Move the "face_landmarker.task" file into the same development folder.
+7. When you are done modifying "head_tracking.py", navigate to your development folder in cmd prompt and run the following commands:  
+   **pyinstaller --onefile head_tracking.py --collect-all mediapipe --add-data "face_landmarker.task;."**  
+   **pyinstaller --onefile launcher.py**  
+## Unity Project Setup  
+1. Download Unity (version 6000.3.9f1).  
+2. Create a new project titled "Digital Window", and place a default Camera at position (0, 0, 0) with rotation (0, 0, 0) and scale (1, 1, 1).  
+3. From the source folder on this GitHub, download "OffAxisProjection.cs" and move it to your project's asset folder.  
+4. Assign the "OffAxisProjection.cs" file as a script component to your camera.  
+5. Create whatever scene you want in front of the camera, when you are done, build the game to the same development folder where "launcher.exe", "face_landmarker.task", and "head_tracking.exe" are located.
+6. Run "launcher.exe" to start the project.
+  
+# Current Issues  
+1. **Perspective Jittering in Engine.** This is most likely due to the poor filtering I am doing in the current implementation. I attempted to do a linear interpolation without realizing that it just introduces lag to the system. The correct way of doing this will most likely involve implementing a one euro filter on the Unity side of things to solve the noisy data stream coming in from the current face capture setup.  
+2. **Y-Axis Adjustments Not Correct.** The intended offset adjustment for the y-axis is a translation, not a camera tilt. This is most likely due to an incorrect sign upon importing the data, or I am putting the y-axis offset in the wrong place.  
+3. **Keyboard Inputs.** Current keyboard inputs are extremely sensitive. This should be a simple fix of preventing values from changing when the key is held down.  
+4. **Latency and Missed-Frame Prediction.** I will probably never be satisfied with this, but I believe there could be big improvements to the latency from Capture -> UDP -> Unity. I also believe the current missed-frame prediction (inside the "head_tracking.py" script) is not working perfectly, and could be improved through better mediapipe implementation and adding optional camera calibration.  
