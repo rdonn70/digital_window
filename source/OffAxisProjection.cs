@@ -2,37 +2,86 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using UnityEngine;
-using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem;
-using UnityEngine.Device;
 
 // Heavily borrows from Robert Kooima's Generalized Perspective Projection (2009) Paper: https://discussions.unity.com/uploads/short-url/r7D1Sc8bPTsZhNnSXHTBDJM0XEw.pdf
 
 public class OffAxisProjection : MonoBehaviour
 {
-    private float width = 1.2460f; // setting a magic number baseline value for the screen width
-    private float offsetX = 0f; // optional x adjustment offset
-    private float offsetY = 0f; // optional y adjustment offset
-    private Vector3 smoothedPos = new Vector3(0f, 0f, 0.6f);
-    private float smoothing = 0.1f;
-
+    private bool calibrated = false;
+    private Vector3[] calibration_points = new Vector3[3];
+    private int calibration_step = 0;
+    private float width = 0f;
+    private float height = 0f;
     private float near = 0.05f;
     private float far = 100f;
 
+    private float offsetX = 0f; // optional x adjustment offset
+    private float offsetY = 0f; // optional y adjustment offset
+
     private Camera cam;
     private UdpClient udp;
+
+    private bool keyboard_mode_toggle = false;
     private Vector3 raw_pos = new Vector3(0f, 0f, 0f);
     private Vector3 raw_pos_prev = new Vector3(0f, 0f, 0f);
+    private float timestamp = 0f;
+    private float timestamp_prev = 0f;
     private Vector3 vr, vu, vn;
+    private Vector3 pa, pb, pc;
+
+    private Vector3 filtered_prev = new Vector3(0f, 0f, 0f); // y_t-1
+    private float min_cutoff_freq = 5.0f; // fc_min, confirugable
+    private float speed_coefficient = 0.02f; // beta, configurable
+    private float sample_interval = 0f; // T_e
+
+    void Calibration()
+    {
+        cam.transform.position = new Vector3(0, 0, -1);
+        cam.transform.rotation = Quaternion.identity;
+        cam.ResetProjectionMatrix();
+
+        if (Mouse.current.leftButton.wasPressedThisFrame) {
+            Ray ray = cam.ScreenPointToRay(Mouse.current.position.ReadValue());
+            float t = -ray.origin.z / ray.direction.z;
+            Vector3 hit = ray.origin + ray.direction * t;
+
+            calibration_points[calibration_step] = hit;
+            calibration_step++;
+
+            if (calibration_step >= 3) {
+                pa = calibration_points[0]; // bottom left
+                pb = calibration_points[1]; // bottom right
+                pc = calibration_points[2]; // top left
+
+                width = Vector3.Distance(pa, pb);
+                height = Vector3.Distance(pa, pc);
+
+                calibrated = true;
+            }
+        }
+
+    }
 
     void OnGUI()
     {
-        // this is all just debug stuff, feel free to ignore
         GUIStyle style = new GUIStyle();
         style.fontSize = 24;
         style.normal.textColor = Color.yellow;
-        GUI.Label(new Rect(10, 10, 500, 30), "RawPos: " + raw_pos.ToString("F3"), style);
-        GUI.Label(new Rect(10, 40, 500, 30), $"Width: {width:F4}  OffsetX: {offsetX:F4}  OffsetY: {offsetY:F4}  Smoothing: {smoothing:F4}", style);
+        if (calibrated != false) { // debug stuff
+            GUI.Label(new Rect(10, 10, 500, 30), $"{timestamp:F4}", style);
+            GUI.Label(new Rect(10, 40, 500, 30), "RawPos: " + raw_pos.ToString("F3"), style);
+            GUI.Label(new Rect(10, 70, 500, 30), $"Width: {width:F4}  OffsetX: {offsetX:F4}  OffsetY: {offsetY:F4}", style);
+            GUI.Label(new Rect(10, 100, 500, 30), $"Beta: {speed_coefficient:F4}  fc_min: {min_cutoff_freq:F4}", style);
+        } else { // calibration stuff
+            if (calibration_step == 0) {
+                GUI.DrawTexture(new Rect(26, (Screen.height - 13), 26, 26), Texture2D.whiteTexture);
+            } else if (calibration_step == 1) {
+                GUI.DrawTexture(new Rect((Screen.width - 13), (Screen.height - 13), 26, 26), Texture2D.whiteTexture);
+            } else if (calibration_step == 2) {
+                GUI.DrawTexture(new Rect(13, 13, 26, 26), Texture2D.whiteTexture);
+            }
+        }
     }
 
     void Start()
@@ -52,27 +101,44 @@ public class OffAxisProjection : MonoBehaviour
 
     void ReceiveUDP()
     {
-        if (udp.Available > 0)
-        {
+        if (udp.Available > 0) {
             IPEndPoint ip = new IPEndPoint(IPAddress.Any, 5005);
             byte[] data = udp.Receive(ref ip);
             string json = Encoding.UTF8.GetString(data);
 
             var parsed = JsonUtility.FromJson<HeadData>(json);
 
-            raw_pos = new Vector3(-parsed.x / 1000f, -parsed.y / 1000f, parsed.z / 1000f); // correcting incoming data from the python program
+            timestamp = parsed.time;
+
+            if (timestamp_prev <= timestamp) { // skip the packet if the timestamp is out of order... granted, could do TCP but I want that juicy speed boost :)
+                raw_pos = new Vector3(-parsed.x / 1000f, -parsed.y / 1000f, parsed.z / 1000f); // correcting incoming data from the python program
+                sample_interval = (timestamp - timestamp_prev) / 1000f;
+                timestamp_prev = timestamp;
+                ApplyOffAxis();
+            }
         }
     }
 
     void ApplyOffAxis()
     {
-        smoothedPos = Vector3.Lerp(raw_pos_prev, raw_pos, smoothing);
-        Vector3 pe = smoothedPos;
+        if(sample_interval <= 0f) {
+            return;
+        }
 
-        float height = width / cam.aspect;
-        Vector3 pa = new Vector3((-width / 2) + offsetX, (-height / 2) + offsetY, 0);
-        Vector3 pb = new Vector3((width / 2) + offsetX, (-height / 2) + offsetY, 0);
-        Vector3 pc = new Vector3((-width / 2) + offsetX, (height / 2) + offsetY, 0);
+        // Implementation of the 1 euro filter, taken from https://github.com/MKSharaf/OneEuroFilterExplained/
+        Vector3 signal_speed = (raw_pos - raw_pos_prev) / sample_interval;
+        float cutoff_freq = min_cutoff_freq + (speed_coefficient * signal_speed.magnitude);
+
+        // let k = tau / sample interval
+        float k = (1 / (2 * Mathf.PI * cutoff_freq)) / sample_interval;
+
+        Vector3 pe = (raw_pos + (k * filtered_prev)) / (1 + k);
+
+        raw_pos_prev = raw_pos;
+        filtered_prev = pe;
+
+        pe.x += offsetX;
+        pe.y += offsetY;
 
         Vector3 va = pa - pe;
         Vector3 vb = pb - pe;
@@ -102,28 +168,70 @@ public class OffAxisProjection : MonoBehaviour
         cam.transform.position = pe; // update's the camera's position in world space with the head tracked location from the python program
 
         cam.transform.rotation = Quaternion.identity; // we care not for camera rotation (at this point in time)
-
-        raw_pos_prev = raw_pos; // for temporal linear interpolation - sounds fancy when you add the word "temporal" :^)
     }
 
     void Update()
     {
+        if (!calibrated) {
+            Calibration();
+            return;
+        }
+
         ReceiveUDP();
-        ApplyOffAxis();
 
         // after getting the UDP packet and applying the projection, we look for keyboard inputs in order to calibrate the screen and adjust head data smoothing
         float step = 0.001f;
         var keyboard = Keyboard.current;
-        if (keyboard != null)
-        {
-            if (keyboard.leftArrowKey.isPressed) offsetX -= step;
-            if (keyboard.rightArrowKey.isPressed) offsetX += step;
-            if (keyboard.upArrowKey.isPressed) offsetY += step;
-            if (keyboard.downArrowKey.isPressed) offsetY -= step;
-            if (keyboard.leftBracketKey.isPressed) width -= step;
-            if (keyboard.rightBracketKey.isPressed) width += step;
-            if (keyboard.commaKey.isPressed) smoothing = Mathf.Max(0.0f, smoothing - 0.01f);
-            if (keyboard.periodKey.isPressed) smoothing = Mathf.Min(1.0f, smoothing + 0.01f);
+        if (keyboard != null) {
+            if (keyboard_mode_toggle == false) {
+                if (keyboard.leftArrowKey.wasPressedThisFrame) offsetX -= step;
+                if (keyboard.rightArrowKey.wasPressedThisFrame) offsetX += step;
+                if (keyboard.upArrowKey.wasPressedThisFrame) offsetY += step;
+                if (keyboard.downArrowKey.wasPressedThisFrame) offsetY -= step;
+                if (keyboard.leftBracketKey.wasPressedThisFrame) {
+                    width = Mathf.Max(0.1f, width - step);
+                    height = width / cam.aspect;
+                    pa = new Vector3((-width / 2), (-height / 2), 0);
+                    pb = new Vector3((width / 2), (-height / 2), 0);
+                    pc = new Vector3((-width / 2), (height / 2), 0);
+                }
+                if (keyboard.rightBracketKey.wasPressedThisFrame) {
+                    width += step;
+                    height = width / cam.aspect;
+                    pa = new Vector3((-width / 2), (-height / 2), 0);
+                    pb = new Vector3((width / 2), (-height / 2), 0);
+                    pc = new Vector3((-width / 2), (height / 2), 0);
+                }
+                if (keyboard.semicolonKey.wasPressedThisFrame) min_cutoff_freq = Mathf.Max(0.01f, min_cutoff_freq - step);
+                if (keyboard.quoteKey.wasPressedThisFrame) min_cutoff_freq += step;
+                if (keyboard.commaKey.wasPressedThisFrame) speed_coefficient = Mathf.Max(0.0f, speed_coefficient - step);
+                if (keyboard.periodKey.wasPressedThisFrame) speed_coefficient = Mathf.Min(1.0f, speed_coefficient + step);
+                if (keyboard.equalsKey.wasPressedThisFrame) keyboard_mode_toggle = true;
+            } else {
+                if (keyboard.leftArrowKey.isPressed) offsetX -= step;
+                if (keyboard.rightArrowKey.isPressed) offsetX += step;
+                if (keyboard.upArrowKey.isPressed) offsetY += step;
+                if (keyboard.downArrowKey.isPressed) offsetY -= step;
+                if (keyboard.leftBracketKey.isPressed) {
+                    width = Mathf.Max(0.1f, width - step);
+                    height = width / cam.aspect;
+                    pa = new Vector3((-width / 2), (-height / 2), 0);
+                    pb = new Vector3((width / 2), (-height / 2), 0);
+                    pc = new Vector3((-width / 2), (height / 2), 0);
+                }
+                if (keyboard.rightBracketKey.isPressed) {
+                    width += step;
+                    height = width / cam.aspect;
+                    pa = new Vector3((-width / 2), (-height / 2), 0);
+                    pb = new Vector3((width / 2), (-height / 2), 0);
+                    pc = new Vector3((-width / 2), (height / 2), 0);
+                }
+                if (keyboard.semicolonKey.isPressed) min_cutoff_freq = Mathf.Max(0.01f, min_cutoff_freq - step);
+                if (keyboard.quoteKey.isPressed) min_cutoff_freq += step;
+                if (keyboard.commaKey.isPressed) speed_coefficient = Mathf.Max(0.0f, speed_coefficient - step);
+                if (keyboard.periodKey.isPressed) speed_coefficient = Mathf.Min(1.0f, speed_coefficient + step);
+                if (keyboard.equalsKey.wasPressedThisFrame) keyboard_mode_toggle = false;
+            }
         }
     }
 
@@ -133,5 +241,6 @@ public class OffAxisProjection : MonoBehaviour
         public float x;
         public float y;
         public float z;
+        public float time;
     }
 }
