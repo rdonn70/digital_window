@@ -43,11 +43,10 @@ A prototype is currently available for download **(Current Version: 0.1)**.
   
 # Current Issues  
 1. **Perspective Jittering in Engine.** This is most likely due to the poor filtering I am doing in the current implementation. I attempted to do a linear interpolation without realizing that it just introduces lag to the system. The correct way of doing this will most likely involve implementing a one euro filter on the Unity side of things to solve the noisy data stream coming in from the current face capture setup.  
-2. **Y-Axis Adjustments Not Correct.** The intended offset adjustment for the y-axis is a translation, not a camera tilt. This is most likely due to an incorrect sign upon importing the data, or I am putting the y-axis offset in the wrong place.  
-3. **Keyboard Inputs.** Current keyboard inputs are extremely sensitive. This should be a simple fix of preventing values from changing when the key is held down.  
-4. **Latency and Missed-Frame Prediction.** I will probably never be satisfied with this, but I believe there could be big improvements to the latency from Capture -> UDP -> Unity. I also believe the current missed-frame prediction (inside the "head_tracking.py" script) is not working perfectly, and could be improved through better mediapipe implementation and adding optional camera calibration.  
+2. **Latency and Missed-Frame Prediction.** I will probably never be satisfied with this, but I believe there could be big improvements to the latency from Capture -> UDP -> Unity. I also believe the current missed-frame prediction (inside the "head_tracking.py" script) is not working perfectly, and could be improved through better mediapipe implementation and adding optional camera calibration.  
   
 # REFERENCES  
-- **Generalized Perspective Projection _(Robert Kooima, 2009)_.** (Source: https://discussions.unity.com/uploads/short-url/r7D1Sc8bPTsZhNnSXHTBDJM0XEw.pdf)  
+- **Generalized Perspective Projection _(Robert Kooima, 2009)_.** (Source: https://discussions.unity.com/uploads/short-url/r7D1Sc8bPTsZhNnSXHTBDJM0XEw.pdf)
+- **One Euro Filter _(MKSharaf, 2026)_.** (Source: https://github.com/MKSharaf/OneEuroFilterExplained/)
 - **Unity API Documentation.** (Source: https://docs.unity3d.com/560/Documentation/ScriptReference/Camera-projectionMatrix.html)  
 - **Google MediaPipe Documentation.** (Source: https://ai.google.dev/edge/mediapipe/solutions/vision/face_landmarker)  
