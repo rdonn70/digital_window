@@ -11,17 +11,18 @@ A prototype is currently available for download **(Current Version: 0.1)**.
 5. The rendered scene updates perspective based on the viewer's head movement.  
   
 # Running from Build (recommended)  
-1. Download the latest release from GitHub.
-2. Extract .zip to your computer.
+1. Download the latest release from GitHub.  
+2. Extract .zip to your computer.  
 3. Make sure you have a webcam connected (current ideal setup is webcam mounted in the center of the monitor and on top of the primary display while facing the user).  
-4. Run "launcher.exe".
+4. Run "launcher.exe".  
   
-## Controls
-### Adjusting the Screen
+## Controls  
+### Adjusting the Screen  
+- Use Equal button to toggle between continuous and step adjustments.  
 - Use Left/Right arrow keys for X offset.  
 - Use Up/Down arrow keys for Y offset.  
-- Use Left/Right bracket keys for monitor width adjustment.  
-- Use Comma/Period keys for smoothing.
+- Use Semi-Colon/Quote keys for minimum cutoff frequency (One Euro Smoothing).  
+- Use Comma/Period keys for speed coefficient (One Euro Smoothing).  
   
 # Compiling from Source  
 ## Python Setup  
@@ -39,14 +40,15 @@ A prototype is currently available for download **(Current Version: 0.1)**.
 3. From the source folder on this GitHub, download "OffAxisProjection.cs" and move it to your project's asset folder.  
 4. Assign the "OffAxisProjection.cs" file as a script component to your camera.  
 5. Create whatever scene you want in front of the camera, when you are done, build the game to the same development folder where "launcher.exe", "face_landmarker.task", and "head_tracking.exe" are located.
-6. Run "launcher.exe" to start the project.
+6. Run "launcher.exe" to start the project.  
   
 # Current Issues  
-1. **Perspective Jittering in Engine.** This is most likely due to the poor filtering I am doing in the current implementation. I attempted to do a linear interpolation without realizing that it just introduces lag to the system. The correct way of doing this will most likely involve implementing a one euro filter on the Unity side of things to solve the noisy data stream coming in from the current face capture setup.  
-2. **Latency and Missed-Frame Prediction.** I will probably never be satisfied with this, but I believe there could be big improvements to the latency from Capture -> UDP -> Unity. I also believe the current missed-frame prediction (inside the "head_tracking.py" script) is not working perfectly, and could be improved through better mediapipe implementation and adding optional camera calibration.  
+1. **Perspective Jittering in Engine.** This is most likely due to the poor calibration and data recording on the python head tracker side. I believe I made it slightly better with subpixel precision and some calculation adjustments (using irises midpoint instead of nose bridge), but it can still be better before I drop down to doing the calibration method. The code in source is currently up to date, but hasn't been compiled yet.  
+2. **Latency and Missed-Frame Prediction.** I will probably never be satisfied with this, but I believe there could be big improvements to the latency from Capture -> UDP -> Unity. I also believe the current missed-frame prediction (inside the "head_tracking.py" script) is not working perfectly, and could be improved through better mediapipe implementation and adding optional camera calibration.
+3. **Initial Screen Calibration.** In the indev build, there is a rudimentary calibration setup I am testing out for getting the screen dimensions. Works similar to other calibration projector systems, it draws three squares for pa, pb, pc and asks the user to click on them with their mouse. Currently, this is done during each start up, but I may end up storing them in a file and allowing the user to delete it to allow for recalibration.  
   
 # REFERENCES  
 - **Generalized Perspective Projection _(Robert Kooima, 2009)_.** (Source: https://discussions.unity.com/uploads/short-url/r7D1Sc8bPTsZhNnSXHTBDJM0XEw.pdf)
-- **One Euro Filter _(MKSharaf, 2026)_.** (Source: https://github.com/MKSharaf/OneEuroFilterExplained/)
+- **One Euro Filter Explained _(MKSharaf, 2026)_.** (Source: https://github.com/MKSharaf/OneEuroFilterExplained/)
 - **Unity API Documentation.** (Source: https://docs.unity3d.com/560/Documentation/ScriptReference/Camera-projectionMatrix.html)  
 - **Google MediaPipe Documentation.** (Source: https://ai.google.dev/edge/mediapipe/solutions/vision/face_landmarker)  
