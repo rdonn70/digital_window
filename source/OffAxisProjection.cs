@@ -188,20 +188,6 @@ public class OffAxisProjection : MonoBehaviour
                 if (keyboard.rightArrowKey.wasPressedThisFrame) offsetX += step;
                 if (keyboard.upArrowKey.wasPressedThisFrame) offsetY += step;
                 if (keyboard.downArrowKey.wasPressedThisFrame) offsetY -= step;
-                if (keyboard.leftBracketKey.wasPressedThisFrame) {
-                    width = Mathf.Max(0.1f, width - step);
-                    height = width / cam.aspect;
-                    pa = new Vector3((-width / 2), (-height / 2), 0);
-                    pb = new Vector3((width / 2), (-height / 2), 0);
-                    pc = new Vector3((-width / 2), (height / 2), 0);
-                }
-                if (keyboard.rightBracketKey.wasPressedThisFrame) {
-                    width += step;
-                    height = width / cam.aspect;
-                    pa = new Vector3((-width / 2), (-height / 2), 0);
-                    pb = new Vector3((width / 2), (-height / 2), 0);
-                    pc = new Vector3((-width / 2), (height / 2), 0);
-                }
                 if (keyboard.semicolonKey.wasPressedThisFrame) min_cutoff_freq = Mathf.Max(0.01f, min_cutoff_freq - step);
                 if (keyboard.quoteKey.wasPressedThisFrame) min_cutoff_freq += step;
                 if (keyboard.commaKey.wasPressedThisFrame) speed_coefficient = Mathf.Max(0.0f, speed_coefficient - step);
@@ -212,20 +198,6 @@ public class OffAxisProjection : MonoBehaviour
                 if (keyboard.rightArrowKey.isPressed) offsetX += step;
                 if (keyboard.upArrowKey.isPressed) offsetY += step;
                 if (keyboard.downArrowKey.isPressed) offsetY -= step;
-                if (keyboard.leftBracketKey.isPressed) {
-                    width = Mathf.Max(0.1f, width - step);
-                    height = width / cam.aspect;
-                    pa = new Vector3((-width / 2), (-height / 2), 0);
-                    pb = new Vector3((width / 2), (-height / 2), 0);
-                    pc = new Vector3((-width / 2), (height / 2), 0);
-                }
-                if (keyboard.rightBracketKey.isPressed) {
-                    width += step;
-                    height = width / cam.aspect;
-                    pa = new Vector3((-width / 2), (-height / 2), 0);
-                    pb = new Vector3((width / 2), (-height / 2), 0);
-                    pc = new Vector3((-width / 2), (height / 2), 0);
-                }
                 if (keyboard.semicolonKey.isPressed) min_cutoff_freq = Mathf.Max(0.01f, min_cutoff_freq - step);
                 if (keyboard.quoteKey.isPressed) min_cutoff_freq += step;
                 if (keyboard.commaKey.isPressed) speed_coefficient = Mathf.Max(0.0f, speed_coefficient - step);
