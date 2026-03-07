@@ -24,7 +24,6 @@ def call_result(result, output_image, timestamp_ms):
 #INIT#
 ######
 
-
 UDP_IP = "127.0.0.1"
 UDP_PORT = 5005
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -46,7 +45,6 @@ options = FaceLandmarkerOptions(base_options=BaseOptions(model_asset_path=model_
 
 ######
 
-
 cap = cv2.VideoCapture(0)                                                                                                                   #start webcam capture
 start_time = time.time()                                                                                                                    #get initial time for timestamping frames
 
@@ -62,20 +60,19 @@ with FaceLandmarker.create_from_options(options) as landmarker:
         mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_frame)
 
         landmarker.detect_async(mp_image, frame_timestamp_ms)                                                                               #do async detection to avoid blocking
-        
+
         if(latest_result and latest_result.face_landmarks):
 
             landmarks = latest_result.face_landmarks[0]
 
             left_eye = landmarks[473]
             right_eye = landmarks[468]
-            nose_bridge = landmarks[168]
 
-            lx, ly = int(left_eye.x * w), int(left_eye.y * h)                                                                               #get x,y pixel locations for the left iris
-            rx, ry = int(right_eye.x * w), int(right_eye.y * h)                                                                             #get x,y pixel locations for the right iris
-            nx, ny = int(nose_bridge.x * w), int(nose_bridge.y * h)                                                                         #get x,y pixel locations for the nose bridge
+            lx, ly = (left_eye.x * w), (left_eye.y * h)                                                                                     #get x,y pixel locations for the left iris
+            rx, ry = (right_eye.x * w), (right_eye.y * h)                                                                                   #get x,y pixel locations for the right iris
+            nx, ny = ((lx + rx) / 2), ((ly + ry) / 2)                                                                                       #get x,y pixel locations for the midpoint of the eyes
 
-            cv2.circle(frame, (nx, ny), 5, (0,255,0), -1)                                                                                   #debug to draw a green circle on the nose bridge (location for x,y,z calculation)
+            cv2.circle(frame, (int(nx), int(ny)), 5, (0,255,0), -1)                                                                         #debug to draw a green circle on the nose eye midpoint (location for x,y,z calculation)
 
             focal_length = w                                                                                                                #approximation of focal length, will cause drift without proper calibration... will look into OpenCV calibration methods for getting focal length of camera
             cx, cy = (w / 2), (h / 2)                                                                                                       #getting the x,y pixel locations of the center of the frame to use as the principal point... will look into OpenCV calibration methods for getting this as well
@@ -105,14 +102,14 @@ with FaceLandmarker.create_from_options(options) as landmarker:
 
             x, y, z = last_pos
 
-        #more debugging code
-        cv2.putText(frame, f"X: {int(x)} mm", (20,40), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255,255,255), 2)
-        cv2.putText(frame, f"Y: {int(y)} mm", (20,70), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255,255,255), 2)
-        cv2.putText(frame, f"Z: {int(z)} mm", (20,100), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255,255,255), 2)     
+        cv2.putText(frame, f"{int(frame_timestamp_ms)}", (20,20), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255,255,255), 2)                          #more debugging code
+        cv2.putText(frame, f"X: {int(x)} mm", (20,50), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255,255,255), 2)
+        cv2.putText(frame, f"Y: {int(y)} mm", (20,80), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255,255,255), 2)
+        cv2.putText(frame, f"Z: {int(z)} mm", (20,110), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255,255,255), 2)     
         cv2.imshow("Head Position", frame)
 
-        head_data = {'x': x, 'y': y, 'z': z}
-        sock.sendto(json.dumps(head_data).encode(), (UDP_IP, UDP_PORT)) #packs this data and sends it over UDP to port 5005
+        head_data = {'x': x, 'y': y, 'z': z, 'time': frame_timestamp_ms}
+        sock.sendto(json.dumps(head_data).encode(), (UDP_IP, UDP_PORT))                                                                     #packs this data and sends it over UDP to port 5005
         
         if(cv2.waitKey(1) & 0xFF == 27):
             break
