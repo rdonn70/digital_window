@@ -1,5 +1,5 @@
-# Digital Window (WIP)
-Project to create a CAVE (Cave Automatic Virtual Environment)-type of display on a projector, based on head tracking data + off-axis projection. By tracking the viewer's head position with a webcam and dynamically adjusting the camera projection matrix, the display behaves like a window into a 3D world rather than a flat monitor.  
+# Unity/Python Digital Window
+Project to create a CAVE-type of display on a monitor/projector, based on head tracking data and using off-axis projection. By tracking the viewer's head position with a webcam and dynamically adjusting the camera projection matrix, the display behaves like a window into a digital world.  
   
 A prototype is currently available for download **(Current Version: 0.1)**.  
   
@@ -21,6 +21,7 @@ A prototype is currently available for download **(Current Version: 0.1)**.
 - Use Equal button to toggle between continuous and step adjustments.  
 - Use Left/Right arrow keys for X offset.  
 - Use Up/Down arrow keys for Y offset.  
+- Used Left/Right bracket keys for Z offset.  
 - Use Semi-Colon/Quote keys for minimum cutoff frequency (One Euro Smoothing).  
 - Use Comma/Period keys for speed coefficient (One Euro Smoothing).  
   
@@ -43,12 +44,11 @@ A prototype is currently available for download **(Current Version: 0.1)**.
 6. Run "launcher.exe" to start the project.  
   
 # Current Issues  
-1. **Perspective Jittering in Engine.** This is most likely due to the poor calibration and data recording on the python head tracker side. I believe I made it slightly better with subpixel precision and some calculation adjustments (using irises midpoint instead of nose bridge), but it can still be better before I drop down to doing the calibration method.  
-2. **Latency and Missed-Frame Prediction.** I will probably never be satisfied with this, but I believe there could be big improvements to the latency from Capture -> UDP -> Unity. I also believe the current missed-frame prediction (inside the "head_tracking.py" script) is not working perfectly, and could be improved through better mediapipe implementation and adding optional camera calibration.
-3. **Initial Screen Calibration.** In the indev build, there is a rudimentary calibration setup I am testing out for getting the screen dimensions. Works similar to other calibration projector systems, it draws three squares for pa, pb, pc and asks the user to click on them with their mouse. Currently, this is done during each start up, but I may end up storing them in a file and allowing the user to delete it to allow for recalibration.  
+1. **Latency and Missed-Frame Prediction.** I will probably never be satisfied with this, but I believe there could be big improvements to the latency from Capture -> UDP -> Unity. I also believe the current missed-frame prediction (inside the "head_tracking.py" script) is not working perfectly, and could be improved through better mediapipe implementation and adding optional camera calibration.
+2. **Small Jittering and Distortion.** There is still some small jittering in the system despite the one euro filter, and some weird behavior when moving your head closer to/further away from the monitor. This might just be some fine tuning or a bug in the projection matrix.  
+3. **Initial Screen Calibration.** I have created a calibration system where, upon startup, you attempt to lineup the red box with the screen borders to the best of your ability. Currently, the values of this rectangle are hard coded. In the next update, I plan on implementing the ability to change the height/width of the display to accomodate different monitors.  
   
 # REFERENCES  
-- **Generalized Perspective Projection _(Robert Kooima, 2009)_.** (Source: https://discussions.unity.com/uploads/short-url/r7D1Sc8bPTsZhNnSXHTBDJM0XEw.pdf)
-- **One Euro Filter Explained _(MKSharaf, 2026)_.** (Source: https://github.com/MKSharaf/OneEuroFilterExplained/)
-- **Unity API Documentation.** (Source: https://docs.unity3d.com/560/Documentation/ScriptReference/Camera-projectionMatrix.html)  
+- **Computing the CAVE Projection Transformation _(Dave Pape, 2005)_.** (Source: https://www.evl.uic.edu/pape/caveproj/)  
+- **One Euro Filter Explained _(MKSharaf, 2026)_.** (Source: https://github.com/MKSharaf/OneEuroFilterExplained/)  
 - **Google MediaPipe Documentation.** (Source: https://ai.google.dev/edge/mediapipe/solutions/vision/face_landmarker)  
