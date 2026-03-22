@@ -1,15 +1,13 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.XR;
 
 public class OffAxisProjection : MonoBehaviour
 {
     private bool calibrated = false;
-    private float near = 0.05f;
+    private float near = 0.01f; // was 0.05f
     private float far = 100f;
 
     private float offsetX = 0f; // optional x adjustment offset
@@ -25,11 +23,14 @@ public class OffAxisProjection : MonoBehaviour
     private float timestamp_prev = 0f;
 
     private Vector3 Xs, Ys, Zs;
+    private double screen_height, screen_width;
+    private float aspect_ratio;
+    private float screen_diagonal = 18.0f;
     private Vector3 LL = new Vector3(-0.3f, 0f, 0.7f);
     private Vector3 LR = new Vector3(0.3f, 0f, 0.7f);
     private Vector3 UL = new Vector3(-0.3f, 0.335f, 0.7f);
     private Vector3 UR = new Vector3(0.3f, 0.335f, 0.7f);
-    private Matrix4x4 M, RotMat;
+    private Matrix4x4 RotMat;
 
     private Vector3 filtered_prev = new Vector3(0f, 0f, 0f); // y_t-1
     private float min_cutoff_freq = 5.0f; // fc_min, confirugable
@@ -48,6 +49,8 @@ public class OffAxisProjection : MonoBehaviour
         cam.transform.rotation = Quaternion.Euler(0f, 0f, 0f);
         cam.ResetProjectionMatrix();
 
+        aspect_ratio = (float)Screen.width / Screen.height;
+
         calibration_line = gameObject.AddComponent<LineRenderer>();
         calibration_line.positionCount = 5;
         calibration_line.startWidth = 0.01f;
@@ -65,6 +68,17 @@ public class OffAxisProjection : MonoBehaviour
 
     void Calibration()
     {
+        screen_height = screen_diagonal / (Mathf.Sqrt((aspect_ratio * aspect_ratio) + 1));
+        screen_width = aspect_ratio * screen_height;
+
+        screen_height = screen_height / 39.37; // convert to meters
+        screen_width = screen_width / 39.37; // convert to meters
+
+        LL = new Vector3((-((float)screen_width) / 2), 0f, 0.7f);
+        LR = new Vector3(((float)screen_width / 2), 0f, 0.7f);
+        UL = new Vector3((-((float)screen_width) / 2), (float)screen_height, 0.7f);
+        UR = new Vector3(((float)screen_width / 2), (float)screen_height, 0.7f);
+
         calibration_line.SetPosition(0, LL); // bottom left
         calibration_line.SetPosition(1, LR); // to bottom right
         calibration_line.SetPosition(2, UR); // to top right
@@ -83,6 +97,7 @@ public class OffAxisProjection : MonoBehaviour
         GUI.Label(new Rect(10, 40, 500, 30), "RawPos: " + raw_pos.ToString("F3"), style);
         GUI.Label(new Rect(10, 70, 500, 30), $"OffsetX: {offsetX:F4}  OffsetY: {offsetY:F4}  OffsetZ: {offsetZ:F4}", style);
         GUI.Label(new Rect(10, 100, 500, 30), $"Beta: {speed_coefficient:F4}  fc_min: {min_cutoff_freq:F4}", style);
+        GUI.Label(new Rect(10, 130, 500, 30), $"Screen Diagonal (in inches): {screen_diagonal:F4}", style);
     }
 
     void ReceiveUDP()
@@ -157,6 +172,8 @@ public class OffAxisProjection : MonoBehaviour
                 if (keyboard.downArrowKey.wasPressedThisFrame) offsetY -= step;
                 if (keyboard.leftBracketKey.wasPressedThisFrame) offsetZ -= step;
                 if (keyboard.rightBracketKey.wasPressedThisFrame) offsetZ += step;
+                if (keyboard.sKey.wasPressedThisFrame) screen_diagonal -= 0.1f;
+                if (keyboard.wKey.wasPressedThisFrame) screen_diagonal += 0.1f;
                 if (keyboard.semicolonKey.wasPressedThisFrame) min_cutoff_freq = Mathf.Max(0.01f, min_cutoff_freq - step);
                 if (keyboard.quoteKey.wasPressedThisFrame) min_cutoff_freq += step;
                 if (keyboard.commaKey.wasPressedThisFrame) speed_coefficient = Mathf.Max(0.0f, speed_coefficient - step);
@@ -169,6 +186,8 @@ public class OffAxisProjection : MonoBehaviour
                 if (keyboard.downArrowKey.isPressed) offsetY -= step;
                 if (keyboard.leftBracketKey.isPressed) offsetZ -= step;
                 if (keyboard.rightBracketKey.isPressed) offsetZ += step;
+                if (keyboard.sKey.isPressed) screen_diagonal -= 0.1f;
+                if (keyboard.wKey.isPressed) screen_diagonal += 0.1f;
                 if (keyboard.semicolonKey.isPressed) min_cutoff_freq = Mathf.Max(0.01f, min_cutoff_freq - step);
                 if (keyboard.quoteKey.isPressed) min_cutoff_freq += step;
                 if (keyboard.commaKey.isPressed) speed_coefficient = Mathf.Max(0.0f, speed_coefficient - step);
@@ -176,7 +195,6 @@ public class OffAxisProjection : MonoBehaviour
                 if (keyboard.equalsKey.wasPressedThisFrame) keyboard_mode_toggle = false;
             }
             if (keyboard.enterKey.isPressed) { //finish calibration by hitting enter key
-
                 if(calibrated == false) {
                     LL = new Vector3(LL.x - offsetX, LL.y - offsetY, LL.z - offsetZ);
                     LR = new Vector3(LR.x - offsetX, LR.y - offsetY, LR.z - offsetZ);
@@ -225,10 +243,9 @@ public class OffAxisProjection : MonoBehaviour
 
         if (calibrated == false) {
             Calibration();
-            return; //skip over data receiving until calibration is done
+        } else {
+            ReceiveUDP();
         }
-
-        ReceiveUDP();
     }
 
     [System.Serializable]
