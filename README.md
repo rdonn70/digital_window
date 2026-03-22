@@ -51,8 +51,7 @@ Youtube Preview: https://www.youtube.com/watch?v=DHONF42AUAg
 # Current Issues  
 1. **Latency and Missed-Frame Prediction.** I will probably never be satisfied with this, but I believe there could be big improvements to the latency from Capture -> UDP -> Unity. I also believe the current missed-frame prediction (inside the "head_tracking.py" script) is not working perfectly, and could be improved through better mediapipe implementation and adding optional camera calibration.
 2. **Small Jittering and Distortion.** There is still some small jittering in the system despite the one euro filter, and some weird behavior when moving your head closer to/further away from the monitor. This might just be some fine tuning or a bug in the projection matrix.  
-3. **Better Z Offset and Calibration.** Currently the effect from moving forward/backward is a bit too extreme, and suffers from some lag and delay.
-4. **Better Test Scene.** I am currently working on trying to create a better scene to make the effects more obvious beyond the current cube array.  
+3. **Better Test Scene.** I am currently working on trying to create a better scene to make the effects more obvious beyond the current cube array.  
   
 # REFERENCES  
 - **Computing the CAVE Projection Transformation _(Dave Pape, 2005)_.** (Source: https://www.evl.uic.edu/pape/caveproj/)  
