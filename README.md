@@ -3,6 +3,8 @@ Project to create a CAVE-type of display on a monitor/projector, based on head t
   
 A prototype is currently available for download **(Current Version: 0.4)**.  
   
+Youtube Preview: https://www.youtube.com/watch?v=DHONF42AUAg  
+  
 ![digital_window](https://github.com/user-attachments/assets/573b87e9-a49b-4eaa-96a5-44e5822e7ab6)  
   
 # How It Works  
