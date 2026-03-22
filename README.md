@@ -16,7 +16,7 @@ Youtube Preview: https://www.youtube.com/watch?v=DHONF42AUAg
   
 # Running from Build (recommended)  
 1. Download the latest release from GitHub.  
-2. Extract .zip to your computer.  
+2. Extract .zip to your desktop.  
 3. Make sure you have a webcam connected (current ideal setup is webcam mounted in the center of the monitor and on top of the primary display while facing the user).  
 4. Run "launcher.exe".  
   
@@ -25,7 +25,8 @@ Youtube Preview: https://www.youtube.com/watch?v=DHONF42AUAg
 - Use Equal button to toggle between continuous and step adjustments.  
 - Use Left/Right arrow keys for X offset.  
 - Use Up/Down arrow keys for Y offset.  
-- Used Left/Right bracket keys for Z offset.  
+- Use Left/Right bracket keys for Z offset.  
+- Use W/S keys to adjust screen diagonal.  
 - Use Semi-Colon/Quote keys for minimum cutoff frequency (One Euro Smoothing).  
 - Use Comma/Period keys for speed coefficient (One Euro Smoothing).  
   
@@ -50,7 +51,8 @@ Youtube Preview: https://www.youtube.com/watch?v=DHONF42AUAg
 # Current Issues  
 1. **Latency and Missed-Frame Prediction.** I will probably never be satisfied with this, but I believe there could be big improvements to the latency from Capture -> UDP -> Unity. I also believe the current missed-frame prediction (inside the "head_tracking.py" script) is not working perfectly, and could be improved through better mediapipe implementation and adding optional camera calibration.
 2. **Small Jittering and Distortion.** There is still some small jittering in the system despite the one euro filter, and some weird behavior when moving your head closer to/further away from the monitor. This might just be some fine tuning or a bug in the projection matrix.  
-3. **Initial Screen Calibration.** I have created a calibration system where, upon startup, you attempt to lineup the red box with the screen borders to the best of your ability. Currently, the values of this rectangle are hard coded. In the next update, I plan on implementing the ability to change the height/width of the display to accomodate different monitors.  
+3. **Better Z Offset and Calibration.** Currently the effect from moving forward/backward is a bit too extreme, and suffers from some lag and delay.
+4. **Better Test Scene.** I am currently working on trying to create a better scene to make the effects more obvious beyond the current cube array.  
   
 # REFERENCES  
 - **Computing the CAVE Projection Transformation _(Dave Pape, 2005)_.** (Source: https://www.evl.uic.edu/pape/caveproj/)  
