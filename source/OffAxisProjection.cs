@@ -6,16 +6,17 @@ using UnityEngine.InputSystem;
 
 public class OffAxisProjection : MonoBehaviour
 {
+    private Camera cam;
+    private UdpClient udp;
+
     private bool calibrated = false;
+    private bool show_debug_gui = true;
     private float near = 0.01f; // was 0.05f
-    private float far = 100f;
+    private float far = 250f;
 
     private float offsetX = 0f; // optional x adjustment offset
     private float offsetY = 0f; // optional y adjustment offset
     private float offsetZ = 0f;
-
-    private Camera cam;
-    private UdpClient udp;
 
     private bool keyboard_mode_toggle = false;
     private Vector3 raw_pos = new Vector3(0f, 0f, 0f);
@@ -90,14 +91,16 @@ public class OffAxisProjection : MonoBehaviour
 
     void OnGUI()
     {
-        GUIStyle style = new GUIStyle();
-        style.fontSize = 24;
-        style.normal.textColor = Color.yellow;
-        GUI.Label(new Rect(10, 10, 500, 30), $"{timestamp:F4}", style);
-        GUI.Label(new Rect(10, 40, 500, 30), "RawPos: " + raw_pos.ToString("F3"), style);
-        GUI.Label(new Rect(10, 70, 500, 30), $"OffsetX: {offsetX:F4}  OffsetY: {offsetY:F4}  OffsetZ: {offsetZ:F4}", style);
-        GUI.Label(new Rect(10, 100, 500, 30), $"Beta: {speed_coefficient:F4}  fc_min: {min_cutoff_freq:F4}", style);
-        GUI.Label(new Rect(10, 130, 500, 30), $"Screen Diagonal (in inches): {screen_diagonal:F4}", style);
+        if (show_debug_gui == true) {
+            GUIStyle style = new GUIStyle();
+            style.fontSize = 24;
+            style.normal.textColor = Color.yellow;
+            GUI.Label(new Rect(10, 10, 500, 30), $"{timestamp:F4}", style);
+            GUI.Label(new Rect(10, 40, 500, 30), "RawPos: " + raw_pos.ToString("F3"), style);
+            GUI.Label(new Rect(10, 70, 500, 30), $"OffsetX: {offsetX:F4}  OffsetY: {offsetY:F4}  OffsetZ: {offsetZ:F4}", style);
+            GUI.Label(new Rect(10, 100, 500, 30), $"Beta: {speed_coefficient:F4}  fc_min: {min_cutoff_freq:F4}", style);
+            GUI.Label(new Rect(10, 130, 500, 30), $"Screen Diagonal (in inches): {screen_diagonal:F4}", style);
+        }
     }
 
     void ReceiveUDP()
@@ -193,6 +196,13 @@ public class OffAxisProjection : MonoBehaviour
                 if (keyboard.commaKey.isPressed) speed_coefficient = Mathf.Max(0.0f, speed_coefficient - step);
                 if (keyboard.periodKey.isPressed) speed_coefficient = Mathf.Min(1.0f, speed_coefficient + step);
                 if (keyboard.equalsKey.wasPressedThisFrame) keyboard_mode_toggle = false;
+            }
+            if (keyboard.backquoteKey.wasPressedThisFrame) { // turn on/off GUI debug text
+                if(show_debug_gui == true) {
+                    show_debug_gui = false;
+                } else {
+                    show_debug_gui = true;
+                }
             }
             if (keyboard.enterKey.isPressed) { //finish calibration by hitting enter key
                 if(calibrated == false) {
