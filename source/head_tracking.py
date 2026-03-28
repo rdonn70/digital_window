@@ -65,21 +65,21 @@ with FaceLandmarker.create_from_options(options) as landmarker:
 
             landmarks = latest_result.face_landmarks[0]
 
-            left_eye = landmarks[473]
-            right_eye = landmarks[468]
+            left_eye = landmarks[263]
+            right_eye = landmarks[33]
 
-            lx, ly = (left_eye.x * w), (left_eye.y * h)                                                                                     #get x,y pixel locations for the left iris
-            rx, ry = (right_eye.x * w), (right_eye.y * h)                                                                                   #get x,y pixel locations for the right iris
+            lx, ly = (left_eye.x * w), (left_eye.y * h)                                                                                     #get x,y pixel locations for the left eye corner
+            rx, ry = (right_eye.x * w), (right_eye.y * h)                                                                                   #get x,y pixel locations for the right eye corner
             nx, ny = ((lx + rx) / 2), ((ly + ry) / 2)                                                                                       #get x,y pixel locations for the midpoint of the eyes
 
             cv2.circle(frame, (int(nx), int(ny)), 5, (0,255,0), -1)                                                                         #debug to draw a green circle on the nose eye midpoint (location for x,y,z calculation)
 
-            focal_length = w                                                                                                                #approximation of focal length, will cause drift without proper calibration... will look into OpenCV calibration methods for getting focal length of camera
-            cx, cy = (w / 2), (h / 2)                                                                                                       #getting the x,y pixel locations of the center of the frame to use as the principal point... will look into OpenCV calibration methods for getting this as well
+            focal_length = w                                                                                                                #approximation of focal length, will cause drift without proper calibration... will eventually replace with OpenCV calibration
+            cx, cy = (w / 2), (h / 2)                                                                                                       #getting the x,y pixel locations of the center of the frame to use as the principal point... will eventually replace with OpenCV calibration
 
             pixel_eye_distance = np.sqrt((lx - rx)**2 + (ly - ry)**2)                                                                       #disance between iris centers using 2 dimension euclidean formula
 
-            real_eye_distance_mm = 63.5                                                                                                     #approximation of 2.5" (63.5mm) of iris-to-iris length from Figure 10 of "Generalized Perspective Projection" by Robert Kooima (2009)
+            real_eye_distance_mm = 85.2                                                                                                     #takes the average Outer Canthal Distance of ~85.2 mm from this paper: https://pmc.ncbi.nlm.nih.gov/articles/PMC6408655/
 
             if(pixel_eye_distance > 0):
                 z = (real_eye_distance_mm * focal_length) / pixel_eye_distance                                                              #depth estimation from pinhole model, using iris frame locations and estimated eye distance
