@@ -1,7 +1,7 @@
 # Unity/Python Digital Window
 Project to create a CAVE-type of display on a monitor/projector, based on head tracking data and using off-axis projection. By tracking the viewer's head position with a webcam and dynamically adjusting the camera projection matrix, the display behaves like a window into a digital world.  
   
-A prototype is currently available for download **(Current Version: 0.4)**.  
+A prototype is currently available for download **(Current Version: 0.5)**.  
   
 Youtube Preview: https://www.youtube.com/watch?v=DHONF42AUAg  
   
