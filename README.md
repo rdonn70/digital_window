@@ -31,7 +31,7 @@ Youtube Preview: https://www.youtube.com/watch?v=DHONF42AUAg
 - Use Comma/Period keys for speed coefficient (One Euro Smoothing).  
 - Use Tilda/Grave key to enable and disable debug UI.
   
-**WHEN DONE WITH THE IN-GAME CALIBRATION, HIT ENTER KEY TO BEGIN THE PROJECTION**  
+**WHEN DONE WITH THE IN-GAME CALIBRATION, HIT THE ENTER KEY TO BEGIN THE PROJECTION**  
   
 # Compiling from Source  
 ## Python Setup  
