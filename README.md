@@ -21,7 +21,7 @@ Youtube Preview: https://www.youtube.com/watch?v=DHONF42AUAg
 4. Run "launcher.exe".  
   
 ## Controls  
-### Adjusting the Screen  
+### Calibrating/Adjusting the Screen  
 - Use Equal button to toggle between continuous and step adjustments.  
 - Use Left/Right arrow keys for X offset.  
 - Use Up/Down arrow keys for Y offset.  
@@ -29,8 +29,9 @@ Youtube Preview: https://www.youtube.com/watch?v=DHONF42AUAg
 - Use W/S keys to adjust screen diagonal.  
 - Use Semi-Colon/Quote keys for minimum cutoff frequency (One Euro Smoothing).  
 - Use Comma/Period keys for speed coefficient (One Euro Smoothing).  
-- Use Tilda/Grave key to enable and disable debug UI.  
-**WHEN DONE WITH CALIBRATION, HIT ENTER KEY TO BEGIN THE PROJECTION**  
+- Use Tilda/Grave key to enable and disable debug UI.
+  
+**WHEN DONE WITH THE IN-GAME CALIBRATION, HIT ENTER KEY TO BEGIN THE PROJECTION**  
   
 # Compiling from Source  
 ## Python Setup  
