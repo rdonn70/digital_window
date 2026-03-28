@@ -29,6 +29,7 @@ Youtube Preview: https://www.youtube.com/watch?v=DHONF42AUAg
 - Use W/S keys to adjust screen diagonal.  
 - Use Semi-Colon/Quote keys for minimum cutoff frequency (One Euro Smoothing).  
 - Use Comma/Period keys for speed coefficient (One Euro Smoothing).  
+- Use Tilda/Grave key to enable and disable debug UI.  
   
 # Compiling from Source  
 ## Python Setup  
@@ -49,9 +50,8 @@ Youtube Preview: https://www.youtube.com/watch?v=DHONF42AUAg
 6. Run "launcher.exe" to start the project.  
   
 # Current Issues  
-1. **Latency and Missed-Frame Prediction.** I will probably never be satisfied with this, but I believe there could be big improvements to the latency from Capture -> UDP -> Unity. I also believe the current missed-frame prediction (inside the "head_tracking.py" script) is not working perfectly, and could be improved through better mediapipe implementation and adding optional camera calibration.
-2. **Small Jittering and Distortion.** There is still some small jittering in the system despite the one euro filter, and some weird behavior when moving your head closer to/further away from the monitor. This might just be some fine tuning or a bug in the projection matrix.  
-3. **Better Test Scene.** I am currently working on trying to create a better scene to make the effects more obvious beyond the current cube array.  
+1. **Latency and Missed-Frame Prediction.** I will probably never be satisfied with this, but I believe there could be big improvements to the latency from Capture -> UDP -> Unity. I also believe the current missed-frame prediction (inside the "head_tracking.py" script) is not working perfectly, and could be improved through better mediapipe implementation and adding camera calibration for depth (current plan is to have an initial "align your face" graphic to make this system camera-agnostic and have a more reliable depth calculation).
+2. **Small Jittering and Distortion.** There is still some jittering and issues with the projection stemming from how the python script calculates the cyclopean eye. To attempt to stabilize the projection, the current version uses the outer canthal distance (of which I am still trying to find papers that have an average from a very large and diverse sample of people). Future modifications will have fallback calculations if one or both eye corners go out of the camera's range and safety measures so the projection matrix doesn't mess up.  
   
 # REFERENCES  
 - **Computing the CAVE Projection Transformation _(Dave Pape, 2005)_.** (Source: https://www.evl.uic.edu/pape/caveproj/)  
