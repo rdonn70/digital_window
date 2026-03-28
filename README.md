@@ -30,6 +30,7 @@ Youtube Preview: https://www.youtube.com/watch?v=DHONF42AUAg
 - Use Semi-Colon/Quote keys for minimum cutoff frequency (One Euro Smoothing).  
 - Use Comma/Period keys for speed coefficient (One Euro Smoothing).  
 - Use Tilda/Grave key to enable and disable debug UI.  
+**WHEN DONE WITH CALIBRATION, HIT ENTER KEY TO BEGIN THE PROJECTION**  
   
 # Compiling from Source  
 ## Python Setup  
