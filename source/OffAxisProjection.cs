@@ -17,6 +17,7 @@ public class OffAxisProjection : MonoBehaviour
     private float offsetX = 0f; // optional x adjustment offset
     private float offsetY = 0f; // optional y adjustment offset
     private float offsetZ = 0f;
+    private float offsetZ_window = 0.7f;
 
     private bool keyboard_mode_toggle = false;
     private Vector3 raw_pos = new Vector3(0f, 0f, 0f);
@@ -26,7 +27,7 @@ public class OffAxisProjection : MonoBehaviour
     private Vector3 Xs, Ys, Zs;
     private double screen_height, screen_width;
     private float aspect_ratio;
-    private float screen_diagonal = 18.0f;
+    private float screen_diagonal = 28.0f;
     private Vector3 LL = new Vector3(-0.3f, 0f, 0.7f);
     private Vector3 LR = new Vector3(0.3f, 0f, 0.7f);
     private Vector3 UL = new Vector3(-0.3f, 0.335f, 0.7f);
@@ -75,10 +76,10 @@ public class OffAxisProjection : MonoBehaviour
         screen_height = screen_height / 39.37; // convert to meters
         screen_width = screen_width / 39.37; // convert to meters
 
-        LL = new Vector3((-((float)screen_width) / 2), 0f, 0.7f);
-        LR = new Vector3(((float)screen_width / 2), 0f, 0.7f);
-        UL = new Vector3((-((float)screen_width) / 2), (float)screen_height, 0.7f);
-        UR = new Vector3(((float)screen_width / 2), (float)screen_height, 0.7f);
+        LL = new Vector3((-((float)screen_width) / 2), 0f, offsetZ_window);
+        LR = new Vector3(((float)screen_width / 2), 0f, offsetZ_window);
+        UL = new Vector3((-((float)screen_width) / 2), (float)screen_height, offsetZ_window);
+        UR = new Vector3(((float)screen_width / 2), (float)screen_height, offsetZ_window);
 
         calibration_line.SetPosition(0, LL); // bottom left
         calibration_line.SetPosition(1, LR); // to bottom right
@@ -91,7 +92,8 @@ public class OffAxisProjection : MonoBehaviour
 
     void OnGUI()
     {
-        if (show_debug_gui == true) {
+        if (show_debug_gui == true)
+        {
             GUIStyle style = new GUIStyle();
             style.fontSize = 24;
             style.normal.textColor = Color.yellow;
@@ -99,13 +101,14 @@ public class OffAxisProjection : MonoBehaviour
             GUI.Label(new Rect(10, 40, 500, 30), "RawPos: " + raw_pos.ToString("F3"), style);
             GUI.Label(new Rect(10, 70, 500, 30), $"OffsetX: {offsetX:F4}  OffsetY: {offsetY:F4}  OffsetZ: {offsetZ:F4}", style);
             GUI.Label(new Rect(10, 100, 500, 30), $"Beta: {speed_coefficient:F4}  fc_min: {min_cutoff_freq:F4}", style);
-            GUI.Label(new Rect(10, 130, 500, 30), $"Screen Diagonal (in inches): {screen_diagonal:F4}", style);
+            GUI.Label(new Rect(10, 130, 500, 30), $"Screen Diagonal (in inches): {screen_diagonal:F4}  Screen Z Offset: {offsetZ_window:F4}", style);
         }
     }
 
     void ReceiveUDP()
     {
-        if (udp.Available > 0) {
+        if (udp.Available > 0)
+        {
             IPEndPoint ip = new IPEndPoint(IPAddress.Any, 5005);
             byte[] data = udp.Receive(ref ip);
             string json = Encoding.UTF8.GetString(data);
@@ -114,7 +117,8 @@ public class OffAxisProjection : MonoBehaviour
 
             timestamp = parsed.time;
 
-            if (timestamp_prev <= timestamp) { // skip the packet if the timestamp is out of order... granted, could do TCP but I want that juicy speed boost :)
+            if (timestamp_prev <= timestamp)
+            { // skip the packet if the timestamp is out of order... granted, could do TCP but I want that juicy speed boost :)
                 raw_pos = new Vector3(-parsed.x / 1000f, -parsed.y / 1000f, -parsed.z / 1000f); // correcting incoming data from the python program
                 sample_interval = (timestamp - timestamp_prev) / 1000f;
                 timestamp_prev = timestamp;
@@ -125,7 +129,8 @@ public class OffAxisProjection : MonoBehaviour
 
     void ApplyOffAxis()
     {
-        if(sample_interval <= 0f) { //skips update if timestamps are out of order
+        if (sample_interval <= 0f)
+        { //skips update if timestamps are out of order
             return;
         }
 
@@ -167,14 +172,18 @@ public class OffAxisProjection : MonoBehaviour
         // look for keyboard inputs in order to calibrate the screen and adjust head data smoothing
         float step = 0.001f;
         var keyboard = Keyboard.current;
-        if (keyboard != null) {
-            if (keyboard_mode_toggle == false) {
+        if (keyboard != null)
+        {
+            if (keyboard_mode_toggle == false)
+            {
                 if (keyboard.leftArrowKey.wasPressedThisFrame) offsetX -= step;
                 if (keyboard.rightArrowKey.wasPressedThisFrame) offsetX += step;
                 if (keyboard.upArrowKey.wasPressedThisFrame) offsetY += step;
                 if (keyboard.downArrowKey.wasPressedThisFrame) offsetY -= step;
                 if (keyboard.leftBracketKey.wasPressedThisFrame) offsetZ -= step;
                 if (keyboard.rightBracketKey.wasPressedThisFrame) offsetZ += step;
+                if (keyboard.aKey.wasPressedThisFrame) offsetZ_window -= step;
+                if (keyboard.dKey.wasPressedThisFrame) offsetZ_window += step;
                 if (keyboard.sKey.wasPressedThisFrame) screen_diagonal -= 0.1f;
                 if (keyboard.wKey.wasPressedThisFrame) screen_diagonal += 0.1f;
                 if (keyboard.semicolonKey.wasPressedThisFrame) min_cutoff_freq = Mathf.Max(0.01f, min_cutoff_freq - step);
@@ -182,13 +191,17 @@ public class OffAxisProjection : MonoBehaviour
                 if (keyboard.commaKey.wasPressedThisFrame) speed_coefficient = Mathf.Max(0.0f, speed_coefficient - step);
                 if (keyboard.periodKey.wasPressedThisFrame) speed_coefficient = Mathf.Min(1.0f, speed_coefficient + step);
                 if (keyboard.equalsKey.wasPressedThisFrame) keyboard_mode_toggle = true;
-            } else {
+            }
+            else
+            {
                 if (keyboard.leftArrowKey.isPressed) offsetX -= step;
                 if (keyboard.rightArrowKey.isPressed) offsetX += step;
                 if (keyboard.upArrowKey.isPressed) offsetY += step;
                 if (keyboard.downArrowKey.isPressed) offsetY -= step;
                 if (keyboard.leftBracketKey.isPressed) offsetZ -= step;
                 if (keyboard.rightBracketKey.isPressed) offsetZ += step;
+                if (keyboard.aKey.isPressed) offsetZ_window -= step;
+                if (keyboard.dKey.isPressed) offsetZ_window += step;
                 if (keyboard.sKey.isPressed) screen_diagonal -= 0.1f;
                 if (keyboard.wKey.isPressed) screen_diagonal += 0.1f;
                 if (keyboard.semicolonKey.isPressed) min_cutoff_freq = Mathf.Max(0.01f, min_cutoff_freq - step);
@@ -197,15 +210,21 @@ public class OffAxisProjection : MonoBehaviour
                 if (keyboard.periodKey.isPressed) speed_coefficient = Mathf.Min(1.0f, speed_coefficient + step);
                 if (keyboard.equalsKey.wasPressedThisFrame) keyboard_mode_toggle = false;
             }
-            if (keyboard.backquoteKey.wasPressedThisFrame) { // turn on/off GUI debug text
-                if(show_debug_gui == true) {
+            if (keyboard.backquoteKey.wasPressedThisFrame)
+            { // turn on/off GUI debug text
+                if (show_debug_gui == true)
+                {
                     show_debug_gui = false;
-                } else {
+                }
+                else
+                {
                     show_debug_gui = true;
                 }
             }
-            if (keyboard.enterKey.isPressed) { //finish calibration by hitting enter key
-                if(calibrated == false) {
+            if (keyboard.enterKey.isPressed)
+            { //finish calibration by hitting enter key
+                if (calibrated == false)
+                {
                     LL = new Vector3(LL.x - offsetX, LL.y - offsetY, LL.z - offsetZ);
                     LR = new Vector3(LR.x - offsetX, LR.y - offsetY, LR.z - offsetZ);
                     UL = new Vector3(UL.x - offsetX, UL.y - offsetY, UL.z - offsetZ);
@@ -251,9 +270,12 @@ public class OffAxisProjection : MonoBehaviour
             }
         }
 
-        if (calibrated == false) {
+        if (calibrated == false)
+        {
             Calibration();
-        } else {
+        }
+        else
+        {
             ReceiveUDP();
         }
     }
