@@ -5,7 +5,7 @@ A prototype is currently available for download **(Current Version: 0.5)**.
   
 Youtube Preview: [https://www.youtube.com/watch?v=DHONF42AUAg  ](https://www.youtube.com/watch?v=2m_rV1FCL3s)
   
-![digital_window](https://github.com/user-attachments/assets/573b87e9-a49b-4eaa-96a5-44e5822e7ab6)  
+![ezgif-6b751e48e957a0e7](https://github.com/user-attachments/assets/d244120e-34fd-406c-8d30-84d99c7be26a)
   
 # How It Works  
 1. A webcam captures the user's face.  
