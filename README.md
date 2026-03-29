@@ -1,5 +1,5 @@
 # Unity/Python Digital Window
-Project to create a CAVE-type of display on a monitor/projector, based on head tracking data and using off-axis projection. By tracking the viewer's head position with a webcam and dynamically adjusting the camera projection matrix, the display behaves like a window into a digital world.  
+A project attempting to create a digital window on a monitor/projector, based on head tracking data and using off-axis projection. By tracking the viewer's head position with a webcam and adjusting the camera projection matrix, the display behaves like a window into a digital world.  
   
 A prototype is currently available for download **(Current Version: 0.5)**.  
   
@@ -9,9 +9,9 @@ Youtube Preview: [https://www.youtube.com/watch?v=DHONF42AUAg  ](https://www.you
   
 # How It Works  
 1. A webcam captures the user's face.  
-2. MediaPipe detects facial landmarks and estimates head position.  
-3. The head position is streamed to Unity using UDP (on port 5005).  
-4. Unity modifies the camera projection matrix using off-axis projection.  
+2. MediaPipe detects face landmarks and roughly estimates the viewer's head position.  
+3. The head position data is streamed to Unity using UDP (on port 5005).  
+4. Unity modifies the camera projection matrix using cleaned up head position data.  
 5. The rendered scene updates perspective based on the viewer's head movement.  
   
 # Running from Build (recommended)  
@@ -22,7 +22,7 @@ Youtube Preview: [https://www.youtube.com/watch?v=DHONF42AUAg  ](https://www.you
   
 ## Controls  
 ### Calibrating/Adjusting the Screen  
-- Use Equal button to toggle between continuous and step adjustments.  
+- Use Equal key to toggle between continuous and step adjustments.  
 - Use Left/Right arrow keys for X offset.  
 - Use Up/Down arrow keys for Y offset.  
 - Use Left/Right bracket keys for Z offset.  
@@ -39,7 +39,7 @@ Youtube Preview: [https://www.youtube.com/watch?v=DHONF42AUAg  ](https://www.you
 2. Download Python (version 3.13.4).  
 3. Install the library dependencies: "pip install opencv-python==4.13.0.92", "pip install numpy==2.4.2", "pip install mediapipe==0.10.32", "pip install pyinstaller==6.18.0".  
 4. From the source folder on this GitHub, download "head_tracking.py" and "launcher.py" to a development folder of your choice. Feel free to modify this file.  
-5. Move the "face_landmarker.task" file into the same development folder.
+5. Move the "face_landmarker.task" file into the same development folder.  
 7. When you are done modifying "head_tracking.py", navigate to your development folder in cmd prompt and run the following commands:  
    **pyinstaller --onefile head_tracking.py --collect-all mediapipe --add-data "face_landmarker.task;."**  
    **pyinstaller --onefile launcher.py**  
