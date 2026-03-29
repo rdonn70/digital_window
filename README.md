@@ -3,7 +3,7 @@ A project attempting to create a digital window on a monitor/projector, based on
   
 A prototype is currently available for download **(Current Version: 0.5)**.  
   
-Youtube Preview: [https://www.youtube.com/watch?v=DHONF42AUAg  ](https://www.youtube.com/watch?v=2m_rV1FCL3s)
+Youtube Preview: https://www.youtube.com/playlist?list=PLalW30gFUM7ttZJ-8__12-GfoM4lg7Qoj
   
 ![ezgif-6b751e48e957a0e7](https://github.com/user-attachments/assets/d244120e-34fd-406c-8d30-84d99c7be26a)
   
