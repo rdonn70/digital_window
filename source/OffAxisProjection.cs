@@ -16,7 +16,10 @@ public class OffAxisProjection : MonoBehaviour
 
     private float offsetX = 0f; // optional x adjustment offset
     private float offsetY = 0f; // optional y adjustment offset
-    private float offsetZ = 0f;
+    private float offsetZ = 0f; // optional z adjustment offset
+    private float sensitivityX = 1.0f; // optional x effect scaling (horizontal sensitivity) recommended = 1.8f
+    private float sensitivityY = 1.0f; // optional y effect scaling (vertical sensitivity) recommended = 1.8f
+    private float sensitivityZ = 1.0f; // optional z effect scaling (depth sensitivity) recommended = 0.8f?
     private float offsetZ_window = 0.7f;
 
     private bool keyboard_mode_toggle = false;
@@ -101,7 +104,8 @@ public class OffAxisProjection : MonoBehaviour
             GUI.Label(new Rect(10, 40, 500, 30), "RawPos: " + raw_pos.ToString("F3"), style);
             GUI.Label(new Rect(10, 70, 500, 30), $"OffsetX: {offsetX:F4}  OffsetY: {offsetY:F4}  OffsetZ: {offsetZ:F4}", style);
             GUI.Label(new Rect(10, 100, 500, 30), $"Beta: {speed_coefficient:F4}  fc_min: {min_cutoff_freq:F4}", style);
-            GUI.Label(new Rect(10, 130, 500, 30), $"Screen Diagonal (in inches): {screen_diagonal:F4}  Screen Z Offset: {offsetZ_window:F4}", style);
+            GUI.Label(new Rect(10, 130, 500, 30), $"X Sensitivity: {sensitivityX:F4}  Y Sensitivity: {sensitivityY:F4}  Z Sensitivity: {sensitivityZ:F4}", style);
+            GUI.Label(new Rect(10, 160, 500, 30), $"Screen Diagonal (in inches): {screen_diagonal:F4}  Screen Z Offset: {offsetZ_window:F4}", style);
         }
     }
 
@@ -148,6 +152,10 @@ public class OffAxisProjection : MonoBehaviour
         pe.y += offsetY;
         pe.z += offsetZ;
 
+        pe.x *= sensitivityX;
+        pe.y *= sensitivityY;
+        pe.z *= sensitivityZ;
+
         Vector3 pes = pe - LL;
         float L = Vector3.Dot(pes, Xs);
         float R = (LR - LL).magnitude - L;
@@ -186,6 +194,12 @@ public class OffAxisProjection : MonoBehaviour
                 if (keyboard.dKey.wasPressedThisFrame) offsetZ_window += step;
                 if (keyboard.sKey.wasPressedThisFrame) screen_diagonal -= 0.1f;
                 if (keyboard.wKey.wasPressedThisFrame) screen_diagonal += 0.1f;
+                if (keyboard.gKey.wasPressedThisFrame) sensitivityX -= 0.1f;
+                if (keyboard.tKey.wasPressedThisFrame) sensitivityX += 0.1f;
+                if (keyboard.hKey.wasPressedThisFrame) sensitivityY -= 0.1f;
+                if (keyboard.yKey.wasPressedThisFrame) sensitivityY += 0.1f;
+                if (keyboard.jKey.wasPressedThisFrame) sensitivityZ -= 0.1f;
+                if (keyboard.uKey.wasPressedThisFrame) sensitivityZ += 0.1f;
                 if (keyboard.semicolonKey.wasPressedThisFrame) min_cutoff_freq = Mathf.Max(0.01f, min_cutoff_freq - step);
                 if (keyboard.quoteKey.wasPressedThisFrame) min_cutoff_freq += step;
                 if (keyboard.commaKey.wasPressedThisFrame) speed_coefficient = Mathf.Max(0.0f, speed_coefficient - step);
@@ -204,6 +218,12 @@ public class OffAxisProjection : MonoBehaviour
                 if (keyboard.dKey.isPressed) offsetZ_window += step;
                 if (keyboard.sKey.isPressed) screen_diagonal -= 0.1f;
                 if (keyboard.wKey.isPressed) screen_diagonal += 0.1f;
+                if (keyboard.gKey.isPressed) sensitivityX -= 0.1f;
+                if (keyboard.tKey.isPressed) sensitivityX += 0.1f;
+                if (keyboard.hKey.isPressed) sensitivityY -= 0.1f;
+                if (keyboard.yKey.isPressed) sensitivityY += 0.1f;
+                if (keyboard.jKey.isPressed) sensitivityZ -= 0.1f;
+                if (keyboard.uKey.isPressed) sensitivityZ += 0.1f;
                 if (keyboard.semicolonKey.isPressed) min_cutoff_freq = Mathf.Max(0.01f, min_cutoff_freq - step);
                 if (keyboard.quoteKey.isPressed) min_cutoff_freq += step;
                 if (keyboard.commaKey.isPressed) speed_coefficient = Mathf.Max(0.0f, speed_coefficient - step);
