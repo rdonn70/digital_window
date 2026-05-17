@@ -1,7 +1,7 @@
 # Unity/Python Digital Window
 A project attempting to create a digital window on a monitor/projector, based on head tracking data and using off-axis projection. By tracking the viewer's head position with a webcam and adjusting the camera projection matrix, the display behaves like a window into a digital world.  
   
-A prototype is currently available for download **(Current Version: 0.5)**.  
+A prototype is currently available for download **(Current Version: 0.6)**.  
   
 Youtube Preview: https://www.youtube.com/playlist?list=PLalW30gFUM7ttZJ-8__12-GfoM4lg7Qoj
   
@@ -27,9 +27,12 @@ Youtube Preview: https://www.youtube.com/playlist?list=PLalW30gFUM7ttZJ-8__12-Gf
 - Use Up/Down arrow keys for Y offset.  
 - Use Left/Right bracket keys for Z offset.  
 - Use W/S keys to adjust screen diagonal.  
+- Use T/G keys to adjust X sensitivity.  
+- Use Y/H keys to adjust Y sensitivity.  
+- Use U/J keys to adjust Z sensitivity.  
 - Use Semi-Colon/Quote keys for minimum cutoff frequency (One Euro Smoothing).  
 - Use Comma/Period keys for speed coefficient (One Euro Smoothing).  
-- Use Tilda/Grave key to enable and disable debug UI.
+- Use Tilda/Grave key to enable and disable debug UI.  
   
 **WHEN DONE WITH THE IN-GAME CALIBRATION, HIT THE ENTER KEY TO BEGIN THE PROJECTION**  
   
@@ -53,7 +56,7 @@ Youtube Preview: https://www.youtube.com/playlist?list=PLalW30gFUM7ttZJ-8__12-Gf
   
 # Current Issues  
 1. **Latency and Missed-Frame Prediction.** I will probably never be satisfied with this, but I believe there could be big improvements to the latency from Capture -> UDP -> Unity. I also believe the current missed-frame prediction (inside the "head_tracking.py" script) is not working perfectly, and could be improved through better mediapipe implementation and adding camera calibration for depth (current plan is to have an initial "align your face" graphic to make this system camera-agnostic and have a more reliable depth calculation).
-2. **Small Jittering and Distortion.** There is still some jittering and issues with the projection stemming from how the python script calculates the cyclopean eye. To attempt to stabilize the projection, the current version uses the outer canthal distance (of which I am still trying to find papers that have an average from a very large and diverse sample of people). Future modifications will have fallback calculations if one or both eye corners go out of the camera's range and safety measures so the projection matrix doesn't mess up.  
+2. **Small Jittering and Distortion.** There is still some jittering and issues with the projection stemming from how the python script calculates the cyclopean eye. To attempt to stabilize the projection, the current version uses the outer canthal distance (of which I am still trying to find papers that have an average from a very large and diverse sample of people). I added some modifiers for X,Y,Z on the estimated eye position which should help to minimize jitter by reducing how much head movements effect the projection.  
   
 # REFERENCES  
 - **Computing the CAVE Projection Transformation _(Dave Pape, 2005)_.** (Source: https://www.evl.uic.edu/pape/caveproj/)  
